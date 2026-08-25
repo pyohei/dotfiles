@@ -6,7 +6,8 @@ import path from "node:path";
 
 const CONFIG_DIR = "~/.config/pyohei-ai";
 const APPS_DIR = "apps";
-const LEGACY_CONFIG = "app.env";
+const CONFIG_FILE = "app.env";
+const DEFAULT_KEY_FILE = "private-key.pem";
 const DEFAULT_APP = "default";
 
 function fail(message) {
@@ -57,23 +58,33 @@ function required(env, key, appName) {
 
 // Resolution order:
 //   1. $GITHUB_APP_CONFIG_PATH (explicit file, overrides the app name)
-//   2. <config>/apps/<name>.env
-//   3. <config>/app.env  -- only for the default app, kept for compatibility
+//   2. <config>/apps/<name>/app.env  -- config and key live in one directory
+//   3. <config>/apps/<name>.env      -- flat layout, kept for compatibility
+//   4. <config>/app.env              -- only for the default app
 async function resolveConfigPath(appName) {
   const override = process.env.GITHUB_APP_CONFIG_PATH;
   if (override) return expandHome(override);
 
   const dir = configDir();
-  const scoped = path.join(dir, APPS_DIR, `${appName}.env`);
-  try {
-    await readFile(scoped, "utf8");
-    return scoped;
-  } catch (err) {
-    if (err.code !== "ENOENT") throw err;
+  const candidates = [
+    path.join(dir, APPS_DIR, appName, CONFIG_FILE),
+    path.join(dir, APPS_DIR, `${appName}.env`),
+  ];
+  if (appName === DEFAULT_APP) candidates.push(path.join(dir, CONFIG_FILE));
+
+  for (const candidate of candidates) {
+    try {
+      await readFile(candidate, "utf8");
+      return candidate;
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err;
+    }
   }
 
-  if (appName === DEFAULT_APP) return path.join(dir, LEGACY_CONFIG);
-  fail(`Unknown app "${appName}" (expected ${scoped}). Run \`pyohei-ai list\`.`);
+  // Nothing on disk: for the default app report the canonical path as missing,
+  // otherwise the app name itself is wrong.
+  if (appName === DEFAULT_APP) return candidates[0];
+  fail(`Unknown app "${appName}" (expected ${candidates[0]}). Run \`pyohei-ai list\`.`);
 }
 
 async function loadApp(appName) {
@@ -86,14 +97,21 @@ async function loadApp(appName) {
     throw err;
   }
   const config = parseEnv(text);
+
+  // The key sits next to its own config unless the config names another path.
+  // A relative path is resolved against that same directory, so a key keeps
+  // whatever filename GitHub gave it without repeating the directory.
+  const keyDir = path.dirname(configPath);
+  const configuredKey = expandHome(config.GITHUB_APP_PRIVATE_KEY_PATH);
+
   return {
     name: appName,
     configPath,
     appId: required(config, "GITHUB_APP_ID", appName),
     installationId: required(config, "GITHUB_APP_INSTALLATION_ID", appName),
-    privateKeyPath: expandHome(
-      required(config, "GITHUB_APP_PRIVATE_KEY_PATH", appName),
-    ),
+    privateKeyPath: configuredKey
+      ? path.resolve(keyDir, configuredKey)
+      : path.join(keyDir, DEFAULT_KEY_FILE),
   };
 }
 
@@ -102,9 +120,21 @@ async function listApps() {
   const names = new Set();
 
   try {
-    const entries = await readdir(path.join(dir, APPS_DIR));
+    const entries = await readdir(path.join(dir, APPS_DIR), {
+      withFileTypes: true,
+    });
     for (const entry of entries) {
-      if (entry.endsWith(".env")) names.add(entry.slice(0, -4));
+      if (entry.isDirectory()) {
+        // A directory counts as an app only once it holds a config.
+        try {
+          await readFile(path.join(dir, APPS_DIR, entry.name, CONFIG_FILE), "utf8");
+          names.add(entry.name);
+        } catch (err) {
+          if (err.code !== "ENOENT") throw err;
+        }
+        continue;
+      }
+      if (entry.name.endsWith(".env")) names.add(entry.name.slice(0, -4));
     }
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
@@ -112,7 +142,7 @@ async function listApps() {
 
   if (!names.has(DEFAULT_APP)) {
     try {
-      await readFile(path.join(dir, LEGACY_CONFIG), "utf8");
+      await readFile(path.join(dir, CONFIG_FILE), "utf8");
       names.add(DEFAULT_APP);
     } catch (err) {
       if (err.code !== "ENOENT") throw err;
@@ -169,8 +199,12 @@ Commands:
   list          List configured apps
   help          Show this message
 
-Apps are configured in ${CONFIG_DIR}/${APPS_DIR}/<app>.env with:
-  GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY_PATH
+Each app lives in ${CONFIG_DIR}/${APPS_DIR}/<app>/ as:
+  ${CONFIG_FILE}          GITHUB_APP_ID and GITHUB_APP_INSTALLATION_ID
+  ${DEFAULT_KEY_FILE}  the app's private key
+
+Set GITHUB_APP_PRIVATE_KEY_PATH in ${CONFIG_FILE} to use another key file;
+a relative value is resolved against the app's own directory.
 
 Environment:
   PYOHEI_AI_APP             Default app name
