@@ -13,5 +13,3 @@ GH_TOKEN=$(pyohei-ai token codex) gh pr create ...
   必ず上の形で、コマンドに直接渡す。
 - App が入っていないリポジトリでは 404 になる。黙って個人名義へ切り替えず、
   App のインストールが必要だと伝える。
-
-詳細は ~/Dev/dotfiles/docs/pyohei-ai.md を参照。
