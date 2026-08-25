@@ -6,8 +6,10 @@
 memo
 *~
 
-# nvim's data/state dirs, created by `HOME=$PWD nvim` during development.
-# .local/bin is tracked, so ignore only these two.
+# Debris from running tools with HOME pointed at this repository, the way the
+# nvim configuration is developed. .local/bin is tracked, so .local is ignored
+# by subdirectory rather than whole.
 .local/share/
 .local/state/
 .viminfo
+Library/

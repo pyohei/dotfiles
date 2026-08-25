@@ -136,3 +136,18 @@ vim.diagnostic.config({
 -- Definition is reachable through CTRL-] because the LSP sets 'tagfunc', but
 -- gd is the reflex. It shadows the built-in "go to local declaration".
 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
+
+-- Plugins ------------------------------------------------------------------
+
+-- vim.pack is Neovim 0.12's own plugin manager: it clones into the data
+-- directory and records revisions in nvim-pack-lock.json next to this file,
+-- which is committed. minpac is no longer needed.
+vim.pack.add({
+  'https://github.com/tpope/vim-fugitive',
+  'https://github.com/lewis6991/gitsigns.nvim',
+})
+
+require('gitsigns').setup({
+  -- The old configuration set g:gitgutter_highlight_lines.
+  linehl = true,
+})
