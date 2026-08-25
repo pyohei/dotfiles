@@ -74,18 +74,24 @@ Organization にインストールした場合は
 1. `$GITHUB_APP_CONFIG_PATH`（ファイルを直接指定。App 名より優先）
 2. `apps/<name>/app.env`
 3. `apps/<name>.env`（旧レイアウト）
-4. `app.env`（`default` のみ。旧レイアウト）
+
+暗黙の既定 App は無い。設定ディレクトリ直下の `app.env` は読まれないので、
+残っていても消してよい。
 
 ## コマンド
 
 ```sh
 pyohei-ai list           # 設定済みの App を一覧
-pyohei-ai token          # default の App のトークンを発行
-pyohei-ai token codex    # App を指定して発行
+pyohei-ai token codex    # App を指定してトークンを発行
 pyohei-ai help
 ```
 
-環境変数 `PYOHEI_AI_APP` で既定の App を変えられる。
+App は必ず名指しする。省略すると `PYOHEI_AI_APP` を見て、それも無ければ
+エラーになる。どの App を使ったか分からないまま動くことはない。
+
+```sh
+export PYOHEI_AI_APP=codex   # 名前を省いたときに使う App
+```
 
 ## AI エージェントに使わせる
 
@@ -149,6 +155,7 @@ GitHub の MCP サーバに静的な環境変数としてトークンを渡す�
 | --- | --- |
 | `command not found: pyohei-ai` | `./install.sh` を実行していない |
 | `Unknown app "x"` | `apps/x/app.env` が無い。`pyohei-ai list` で確認 |
+| `No app given` | App 名を渡すか `PYOHEI_AI_APP` を設定する |
 | `ENOENT ... private-key.pem` | 鍵が置かれていない。エラーに探したパスが出る |
 | `401` | App ID と鍵の App が食い違っている。JWT の署名検証に失敗している |
 | `404` | Installation ID が違うか、App がその対象にインストールされていない |

@@ -8,7 +8,6 @@ const CONFIG_DIR = "~/.config/pyohei-ai";
 const APPS_DIR = "apps";
 const CONFIG_FILE = "app.env";
 const DEFAULT_KEY_FILE = "private-key.pem";
-const DEFAULT_APP = "default";
 
 function fail(message) {
   console.error(`pyohei-ai: ${message}`);
@@ -60,7 +59,6 @@ function required(env, key, appName) {
 //   1. $GITHUB_APP_CONFIG_PATH (explicit file, overrides the app name)
 //   2. <config>/apps/<name>/app.env  -- config and key live in one directory
 //   3. <config>/apps/<name>.env      -- flat layout, kept for compatibility
-//   4. <config>/app.env              -- only for the default app
 async function resolveConfigPath(appName) {
   const override = process.env.GITHUB_APP_CONFIG_PATH;
   if (override) return expandHome(override);
@@ -70,7 +68,6 @@ async function resolveConfigPath(appName) {
     path.join(dir, APPS_DIR, appName, CONFIG_FILE),
     path.join(dir, APPS_DIR, `${appName}.env`),
   ];
-  if (appName === DEFAULT_APP) candidates.push(path.join(dir, CONFIG_FILE));
 
   for (const candidate of candidates) {
     try {
@@ -81,9 +78,6 @@ async function resolveConfigPath(appName) {
     }
   }
 
-  // Nothing on disk: for the default app report the canonical path as missing,
-  // otherwise the app name itself is wrong.
-  if (appName === DEFAULT_APP) return candidates[0];
   fail(`Unknown app "${appName}" (expected ${candidates[0]}). Run \`pyohei-ai list\`.`);
 }
 
@@ -140,15 +134,6 @@ async function listApps() {
     if (err.code !== "ENOENT") throw err;
   }
 
-  if (!names.has(DEFAULT_APP)) {
-    try {
-      await readFile(path.join(dir, CONFIG_FILE), "utf8");
-      names.add(DEFAULT_APP);
-    } catch (err) {
-      if (err.code !== "ENOENT") throw err;
-    }
-  }
-
   return [...names].sort();
 }
 
@@ -195,7 +180,7 @@ function usage() {
   console.log(`Usage: pyohei-ai <command> [app]
 
 Commands:
-  token [app]   Print a GitHub App installation token (default: ${DEFAULT_APP})
+  token <app>   Print a GitHub App installation token
   list          List configured apps
   help          Show this message
 
@@ -207,7 +192,7 @@ Set GITHUB_APP_PRIVATE_KEY_PATH in ${CONFIG_FILE} to use another key file;
 a relative value is resolved against the app's own directory.
 
 Environment:
-  PYOHEI_AI_APP             Default app name
+  PYOHEI_AI_APP             App to use when none is given on the command line
   PYOHEI_AI_CONFIG_DIR      Override ${CONFIG_DIR}
   GITHUB_APP_CONFIG_PATH    Use this env file directly`);
 }
@@ -217,7 +202,12 @@ async function main() {
 
   switch (command) {
     case "token": {
-      const appName = rest[0] || process.env.PYOHEI_AI_APP || DEFAULT_APP;
+      // The app is always named outright, either on the command line or in
+      // the environment -- there is no app that gets picked implicitly.
+      const appName = rest[0] || process.env.PYOHEI_AI_APP;
+      if (!appName) {
+        fail("No app given. Pass one, or set PYOHEI_AI_APP.");
+      }
       const app = await loadApp(appName);
       process.stdout.write(await mintToken(app));
       return;
