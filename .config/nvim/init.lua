@@ -114,3 +114,25 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter' }, {
     vim.fn.matchadd('FullWidthSpace', '　')
   end,
 })
+
+-- LSP ----------------------------------------------------------------------
+
+-- Server definitions live in lsp/, one file per server, and are looked up by
+-- name. Neovim 0.11 and later has all of this built in; no plugin involved.
+vim.lsp.enable({ 'pyright', 'vtsls', 'cssls', 'html', 'gopls' })
+
+-- Diagnostics are signs and underlines by default. Show the message inline as
+-- well, so a problem does not need a cursor hover to be read.
+vim.diagnostic.config({
+  virtual_text = { current_line = false },
+  severity_sort = true,
+})
+
+-- Almost everything is mapped already: K hovers, grn renames, gra runs a code
+-- action, grr lists references, gri implementations, grt the type definition,
+-- gO document symbols, [d and ]d step through diagnostics and CTRL-W d opens
+-- the message under the cursor.
+--
+-- Definition is reachable through CTRL-] because the LSP sets 'tagfunc', but
+-- gd is the reflex. It shadows the built-in "go to local declaration".
+vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
