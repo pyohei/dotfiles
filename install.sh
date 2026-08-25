@@ -1,9 +1,9 @@
 #!/bin/sh
-# Copy this repository's .local/bin scripts into ~/.local/bin.
+# Copy this repository's files into $HOME.
 #
 # Copy only -- nothing is ever removed. Files that this repository no longer
 # tracks (e.g. a renamed script's old name) stay behind and must be deleted
-# by hand.
+# by hand. Existing files at the destination are overwritten.
 #
 # Usage:
 #   ./install.sh            copy
@@ -11,23 +11,20 @@
 
 set -eu
 
-src_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.local/bin" && pwd)
-dst_dir="$HOME/.local/bin"
+repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+# Each path is relative to both the repository and $HOME. A directory copies
+# the files directly inside it, not the tree below it.
+targets='.local/bin .claude/CLAUDE.md .codex/AGENTS.md'
 
 dry_run=0
 if [ "${1:-}" = "-n" ]; then
   dry_run=1
 fi
 
-if [ "$dry_run" -eq 0 ]; then
-  mkdir -p "$dst_dir"
-fi
-
-for src in "$src_dir"/*; do
-  [ -f "$src" ] || continue
-
-  name=$(basename "$src")
-  dst="$dst_dir/$name"
+install_file() {
+  src=$1
+  dst=$2
 
   if [ "$dry_run" -eq 1 ]; then
     if [ -e "$dst" ]; then
@@ -35,17 +32,33 @@ for src in "$src_dir"/*; do
     else
       echo "would install   $dst"
     fi
-    continue
+    return
   fi
 
+  mkdir -p "$(dirname -- "$dst")"
   # -p keeps the mode, so a 0700 script stays 0700.
   cp -p "$src" "$dst"
   echo "installed $dst"
+}
+
+for target in $targets; do
+  src="$repo/$target"
+
+  if [ -d "$src" ]; then
+    for file in "$src"/*; do
+      [ -f "$file" ] || continue
+      install_file "$file" "$HOME/$target/$(basename -- "$file")"
+    done
+  elif [ -f "$src" ]; then
+    install_file "$src" "$HOME/$target"
+  else
+    echo "warning: $target is not in the repository" >&2
+  fi
 done
 
 if [ "$dry_run" -eq 0 ]; then
   case ":$PATH:" in
-    *":$dst_dir:"*) ;;
-    *) echo "warning: $dst_dir is not on your PATH" >&2 ;;
+    *":$HOME/.local/bin:"*) ;;
+    *) echo "warning: $HOME/.local/bin is not on your PATH" >&2 ;;
   esac
 fi

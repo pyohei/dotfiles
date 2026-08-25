@@ -4,7 +4,8 @@ This is my dot file.
 
 ## Install
 
-Copies `.local/bin` into `~/.local/bin`.
+Copies `.local/bin` into `~/.local/bin`, and the AI instruction files
+into `~/.claude` and `~/.codex`.
 
 ```sh
 ./install.sh -n   # dry run
