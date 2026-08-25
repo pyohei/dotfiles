@@ -5,3 +5,9 @@
 .DS_Store
 memo
 *~
+
+# nvim's data/state dirs, created by `HOME=$PWD nvim` during development.
+# .local/bin is tracked, so ignore only these two.
+.local/share/
+.local/state/
+.viminfo
