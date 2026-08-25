@@ -14,8 +14,8 @@ set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 # Each path is relative to both the repository and $HOME. A directory copies
-# the files directly inside it, not the tree below it.
-targets='.local/bin .claude/CLAUDE.md .codex/AGENTS.md'
+# the whole tree below it, so nested layouts (.config/nvim/lua/...) survive.
+targets='.local/bin .claude/CLAUDE.md .codex/AGENTS.md .config/nvim'
 
 dry_run=0
 if [ "${1:-}" = "-n" ]; then
@@ -23,31 +23,34 @@ if [ "${1:-}" = "-n" ]; then
 fi
 
 install_file() {
-  src=$1
-  dst=$2
+  # Underscored because POSIX sh has no `local`: plain src/dst here would
+  # clobber the caller's variables of the same name.
+  _src=$1
+  _dst=$2
 
   if [ "$dry_run" -eq 1 ]; then
-    if [ -e "$dst" ]; then
-      echo "would overwrite $dst"
+    if [ -e "$_dst" ]; then
+      echo "would overwrite $_dst"
     else
-      echo "would install   $dst"
+      echo "would install   $_dst"
     fi
     return
   fi
 
-  mkdir -p "$(dirname -- "$dst")"
+  mkdir -p "$(dirname -- "$_dst")"
   # -p keeps the mode, so a 0700 script stays 0700.
-  cp -p "$src" "$dst"
-  echo "installed $dst"
+  cp -p "$_src" "$_dst"
+  echo "installed $_dst"
 }
 
 for target in $targets; do
   src="$repo/$target"
 
   if [ -d "$src" ]; then
-    for file in "$src"/*; do
-      [ -f "$file" ] || continue
-      install_file "$file" "$HOME/$target/$(basename -- "$file")"
+    # Walk the tree from inside $src so that each path comes out relative to
+    # the target, which is exactly the tail we need under $HOME.
+    (CDPATH= cd -- "$src" && find . -type f -print) | while read -r rel; do
+      install_file "$src/${rel#./}" "$HOME/$target/${rel#./}"
     done
   elif [ -f "$src" ]; then
     install_file "$src" "$HOME/$target"
