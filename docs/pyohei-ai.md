@@ -8,6 +8,7 @@ GitHub App の installation token を発行する CLI。複数の App を使い�
 ## インストール
 
 リポジトリ直下の `install.sh` が `.local/bin` を `~/.local/bin` へコピーする。
+AI 向けの規約ファイル（`.claude/CLAUDE.md`、`.codex/AGENTS.md`）も同時に配られる。
 
 ```sh
 ./install.sh -n   # 何がコピーされるか確認
@@ -95,59 +96,68 @@ export PYOHEI_AI_APP=codex   # 名前を省いたときに使う App
 
 ## AI エージェントに使わせる
 
-### 原則
+### 何を App 名義にするか
 
-**トークンを画面に出さない。** `pyohei-ai token codex` は標準出力にトークンを
-そのまま出すので、エージェントに単体で実行させると会話ログや履歴ファイルに
-生のトークンが残る。値を経由させず、コマンド置換でそのまま渡す。
+App 名義にするのは **Issue / Pull Request / それらへのコメント** だけ。コミットと
+push は個人名義のまま残す。
 
-```sh
-GH_TOKEN=$(pyohei-ai token codex) gh pr list
-```
+こうすると、コードの著者は自分のまま、AI が出した変更は AI 名義の Pull Request
+として届く。GitHub は自分が作成した Pull Request を自分で approve できないので、
+作成者を分けておくと個人開発でもレビューが成立する。AI ごとに App を分ければ、
+AI 同士のやり取りも GitHub 上に別々の主体として記録される。
 
-**保存しない。** installation token の有効期限は発行から 1 時間。ファイルや
-シェルの環境変数に貯めず、使う直前に発行する。期限切れは 401 で失敗するだけで、
-黙って壊れることはない。
+コミットの著者は `user.name` / `user.email` で決まる。push に使うトークンとは
+無関係なので、push が App 経由かどうかは著者名に影響しない。
 
 ### gh コマンド
 
-`GH_TOKEN` は `gh auth login` で保存した認証より優先される。その 1 コマンドの
-間だけ App として振る舞う。
+`GH_TOKEN` は `gh auth login` で保存した認証より優先される。そのコマンドの間だけ
+App として振る舞う。
 
 ```sh
-GH_TOKEN=$(pyohei-ai token codex) gh issue list --repo owner/repo
+GH_TOKEN=$(pyohei-ai token claude) gh issue create --title ... --body ...
+GH_TOKEN=$(pyohei-ai token claude) gh pr create --fill
+GH_TOKEN=$(pyohei-ai token codex)  gh pr comment 12 --body ...
 ```
 
-### git の push / clone
+**トークンを画面に出さない。** `pyohei-ai token claude` を単体で実行すると標準出力に
+そのまま出るので、エージェントに実行させると会話ログや履歴ファイルに 1 時間有効な
+認証情報が残る。上のようにコマンド置換で直接渡す。
 
-一時的な credential helper を使うと、トークンが `.git/config` にも
-`~/.git-credentials` にも残らない。
+**保存しない。** 有効期限は発行から 1 時間。ファイルや環境変数に貯めず、使う直前に
+発行する。期限切れは 401 で失敗するだけで、黙って壊れることはない。
 
-```sh
-git -c credential.helper='!f() { echo username=x-access-token; echo password=$(pyohei-ai token codex); }; f' push
-```
+### git
 
-リモート URL に `https://x-access-token:<token>@github.com/...` と直接埋める方法は
-`.git/config` にトークンが平文で残るので使わない。
+何も設定しない。push は個人の認証情報のまま通り、コミットは自分名義で残る。
+
+git の credential helper で App のトークンを使わせることもできるが、上記の
+方針では push を App 名義にする理由がない。`gh` にも効かないので、この用途では
+設定しない。
 
 ### MCP サーバ
 
 GitHub の MCP サーバに静的な環境変数としてトークンを渡す構成は、1 時間で失効する
-ため相性が悪い。使うなら、サーバの起動コマンドをラッパースクリプトにして、
-起動のたびに `pyohei-ai token` で発行させる。長時間動かすなら失効を前提に、
-再起動で拾い直せる形にしておく。
+ため相性が悪い。使うなら、サーバの起動コマンドをラッパースクリプトにして、起動の
+たびに `pyohei-ai token` で発行させる。
 
 ### 依頼の仕方
 
-エージェントには「トークン」ではなく「トークンの取り方」を渡す。プロンプトや
-`CLAUDE.md` / `AGENTS.md` にこう書いておけばよい。
+毎回頼まなくて済むよう、規約として置いておく。このリポジトリでは
+`.claude/CLAUDE.md` と `.codex/AGENTS.md` に書き、`install.sh` が
+`~/.claude/` と `~/.codex/` へ配る。
 
-> GitHub を操作するときは個人の `gh` 認証ではなく GitHub App を使うこと。
-> `GH_TOKEN=$(pyohei-ai token codex) gh ...` の形で実行する。
-> `pyohei-ai token` を単体で実行してトークンを表示してはいけない。
+エージェントには「トークン」ではなく「トークンの取り方」を渡す。トークンそのものを
+会話に貼り付けると、ログに残るうえ 1 時間で使えなくなる。
 
-トークンそのものを会話に貼り付けて渡すのは避ける。ログに残るうえ、1 時間で
-使えなくなる。
+### 前提
+
+App が対象リポジトリにインストールされていること。インストールされていなければ
+API は 404 を返す。AI ごとに App を分ける場合、両方の AI に触らせたい
+リポジトリには両方の App を入れておく。
+
+必要な権限は Issues: Read & write、Pull requests: Read & write、Contents: Read。
+App 名義で push もさせるなら Contents も Write にする。
 
 ## うまくいかないとき
 
