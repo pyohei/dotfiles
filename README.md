@@ -4,7 +4,7 @@ This is my dot file.
 
 ## Install
 
-Copies `.local/bin` into `~/.local/bin`, the AI instruction files into
+Copies `.zshrc` and `.local/bin` into `$HOME`, the AI instruction files into
 `~/.claude` and `~/.codex`, and the Neovim configuration into
 `~/.config/nvim`.
 
