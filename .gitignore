@@ -13,3 +13,6 @@ memo
 .local/state/
 .viminfo
 Library/
+.cache/
+.npm/
+go/

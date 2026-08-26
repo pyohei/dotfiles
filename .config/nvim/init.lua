@@ -57,6 +57,11 @@ vim.opt.clipboard = 'unnamed'
 
 -- Keymaps ------------------------------------------------------------------
 
+-- Space, because the mappings below and the plugin ones further down are all
+-- leader-prefixed and backslash is awkward. Must come before any <Leader> map.
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+
 -- Too close to other two-key commands to be worth the risk of quitting.
 vim.keymap.set('n', 'ZZ', '<Nop>')
 vim.keymap.set('n', 'ZQ', '<Nop>')
@@ -115,6 +120,80 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter' }, {
   end,
 })
 
+-- Plugins ------------------------------------------------------------------
+
+-- vim.pack is Neovim 0.12's own plugin manager: it clones into the data
+-- directory and records revisions in nvim-pack-lock.json next to this file,
+-- which is committed. minpac is no longer needed.
+vim.pack.add({
+  'https://github.com/tpope/vim-fugitive',
+  'https://github.com/lewis6991/gitsigns.nvim',
+  'https://github.com/nvim-lua/plenary.nvim', -- telescope's dependency
+  'https://github.com/nvim-telescope/telescope.nvim',
+  'https://github.com/stevearc/oil.nvim',
+  'https://github.com/mason-org/mason.nvim',
+  -- Named, because the repository itself is just called "nvim".
+  { src = 'https://github.com/catppuccin/nvim', name = 'catppuccin' },
+  'https://github.com/rebelot/kanagawa.nvim',
+  'https://github.com/folke/tokyonight.nvim',
+})
+
+require('gitsigns').setup({
+  -- The old configuration set g:gitgutter_highlight_lines.
+  linehl = true,
+})
+
+-- Replaces ctrlp. find_files and live_grep shell out to fd and rg, both of
+-- which are installed.
+require('telescope').setup({})
+local telescope = require('telescope.builtin')
+vim.keymap.set('n', '<Leader>f', telescope.find_files, { desc = 'Find files' })
+vim.keymap.set('n', '<Leader>g', telescope.live_grep, { desc = 'Grep in project' })
+vim.keymap.set('n', '<Leader>b', telescope.buffers, { desc = 'Open buffers' })
+vim.keymap.set('n', '<Leader>h', telescope.help_tags, { desc = 'Help tags' })
+
+-- Replaces fern. A directory is an ordinary buffer here: rename a file by
+-- editing the line and saving.
+require('oil').setup({})
+vim.keymap.set('n', '-', '<Cmd>Oil<CR>', { desc = 'Open parent directory' })
+
+-- Installs language servers into Neovim's own data directory and puts them on
+-- PATH, so they survive fnm switching the active node version. Must run
+-- before any server is spawned.
+require('mason').setup()
+
+-- The servers themselves land in the data directory, which is machine-local
+-- and not committed, so a fresh machine starts without them. Fetch whatever is
+-- missing in the background rather than leaving it as a manual step.
+--
+-- The installed list is read from disk, and the registry -- which is a network
+-- call -- is only refreshed when something is actually missing.
+local servers = { 'pyright', 'vtsls', 'css-lsp', 'html-lsp', 'gopls' }
+
+local registry = require('mason-registry')
+local installed = {}
+for _, name in ipairs(registry.get_installed_package_names()) do
+  installed[name] = true
+end
+
+local missing = vim.tbl_filter(function(name)
+  return not installed[name]
+end, servers)
+
+if #missing > 0 then
+  registry.refresh(function()
+    for _, name in ipairs(missing) do
+      vim.notify('mason: installing ' .. name)
+      registry.get_package(name):install()
+    end
+  end)
+end
+
+-- Colour scheme -------------------------------------------------------------
+
+-- kanagawa and tokyonight are installed too; :colorscheme <name> to compare.
+vim.cmd.colorscheme('catppuccin')
+
 -- LSP ----------------------------------------------------------------------
 
 -- Server definitions live in lsp/, one file per server, and are looked up by
@@ -136,18 +215,3 @@ vim.diagnostic.config({
 -- Definition is reachable through CTRL-] because the LSP sets 'tagfunc', but
 -- gd is the reflex. It shadows the built-in "go to local declaration".
 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
-
--- Plugins ------------------------------------------------------------------
-
--- vim.pack is Neovim 0.12's own plugin manager: it clones into the data
--- directory and records revisions in nvim-pack-lock.json next to this file,
--- which is committed. minpac is no longer needed.
-vim.pack.add({
-  'https://github.com/tpope/vim-fugitive',
-  'https://github.com/lewis6991/gitsigns.nvim',
-})
-
-require('gitsigns').setup({
-  -- The old configuration set g:gitgutter_highlight_lines.
-  linehl = true,
-})
