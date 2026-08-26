@@ -13,6 +13,10 @@ Copies `.local/bin` into `~/.local/bin`, the AI instruction files into
 ./install.sh
 ```
 
+A destination that already differs from the repository is reported and left
+alone, so an edit made directly in `$HOME` survives a routine run. Pass `-f`
+to let the repository win.
+
 Files this repository no longer tracks are left in place and have to be
 removed by hand.
 
