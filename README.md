@@ -23,6 +23,10 @@ removed by hand.
 by mason on first launch. Both land outside this repository, so only the
 configuration is tracked here.
 
+Treesitter parsers are compiled on first launch and need the `tree-sitter` CLI,
+which is its own formula -- `brew install tree-sitter-cli`, not `tree-sitter`,
+which ships only the library.
+
 To work on the configuration without touching `$HOME`, point `HOME` at the
 repository:
 

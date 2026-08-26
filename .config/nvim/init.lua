@@ -131,6 +131,9 @@ vim.pack.add({
   'https://github.com/nvim-lua/plenary.nvim', -- telescope's dependency
   'https://github.com/nvim-telescope/telescope.nvim',
   'https://github.com/stevearc/oil.nvim',
+  -- The default branch is the superseded one; main is the rewrite that
+  -- targets Neovim's own treesitter integration.
+  { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main' },
   'https://github.com/mason-org/mason.nvim',
   -- Named, because the repository itself is just called "nvim".
   { src = 'https://github.com/catppuccin/nvim', name = 'catppuccin' },
@@ -161,6 +164,26 @@ vim.keymap.set('n', '<Leader>f', telescope.find_files, { desc = 'Find files' })
 vim.keymap.set('n', '<Leader>g', telescope.live_grep, { desc = 'Grep in project' })
 vim.keymap.set('n', '<Leader>b', telescope.buffers, { desc = 'Open buffers' })
 vim.keymap.set('n', '<Leader>h', telescope.help_tags, { desc = 'Help tags' })
+
+-- Real parsers instead of the regex highlighting Neovim falls back to, which
+-- also gives structural indent. c, lua, markdown, query, vim and vimdoc ship
+-- with Neovim, so only the rest are fetched.
+require('nvim-treesitter').install({
+  'bash', 'css', 'diff', 'gitcommit', 'go', 'gomod', 'html', 'javascript',
+  'json', 'python', 'ruby', 'toml', 'tsx', 'typescript', 'yaml',
+})
+
+vim.api.nvim_create_autocmd('FileType', {
+  group = vim.api.nvim_create_augroup('TreesitterStart', { clear = true }),
+  callback = function(args)
+    -- Filetypes whose parser is missing, or not installed yet, keep the
+    -- built-in highlighting rather than raising an error.
+    if not pcall(vim.treesitter.start, args.buf) then
+      return
+    end
+    vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  end,
+})
 
 -- Replaces fern. A directory is an ordinary buffer here: rename a file by
 -- editing the line and saving.
