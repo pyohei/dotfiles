@@ -17,14 +17,17 @@
 
 set -eu
 
-repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+repo=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
 # Each path is relative to both the repository and $HOME. A directory copies
 # the whole tree below it, so nested layouts (.config/nvim/lua/...) survive.
 targets='.zshrc .local/bin .claude/CLAUDE.md .codex/AGENTS.md .config/nvim'
 
 usage() {
-  sed -n '2,17p' "$0" | cut -c 3-
+  # The comment block at the top of this file, minus the shebang and the
+  # leading '# '. It stops at the first line that is not a comment, so editing
+  # the block does not also mean editing a line number here.
+  sed -n '2,/^[^#]/p' "$0" | sed -e '/^[^#]/d' -e 's/^#//' -e 's/^ //'
 }
 
 dry_run=0
@@ -81,13 +84,14 @@ install_file() {
   echo "installed       $_dst"
 }
 
+# shellcheck disable=SC2086  # $targets is a space-separated list on purpose.
 for target in $targets; do
   src="$repo/$target"
 
   if [ -d "$src" ]; then
     # Walk the tree from inside $src so that each path comes out relative to
     # the target, which is exactly the tail we need under $HOME.
-    (CDPATH= cd -- "$src" && find . -type f -print) | while read -r rel; do
+    (CDPATH='' cd -- "$src" && find . -type f -print) | while read -r rel; do
       install_file "$src/${rel#./}" "$HOME/$target/${rel#./}"
     done
   elif [ -f "$src" ]; then
