@@ -181,19 +181,34 @@ require('mason').setup()
 --
 -- The installed list is read from disk, and the registry -- which is a network
 -- call -- is only refreshed when something is actually missing.
-local servers = { 'pyright', 'vtsls', 'css-lsp', 'html-lsp', 'gopls' }
+-- mason package name -> the executable it is expected to leave behind. An
+-- install interrupted partway through still registers as installed but leaves
+-- a dangling symlink, so the binary is what actually gets checked.
+local servers = {
+  ['pyright'] = 'pyright-langserver',
+  ['vtsls'] = 'vtsls',
+  ['css-lsp'] = 'vscode-css-language-server',
+  ['html-lsp'] = 'vscode-html-language-server',
+  ['gopls'] = 'gopls',
+}
 
-local registry = require('mason-registry')
-local installed = {}
-for _, name in ipairs(registry.get_installed_package_names()) do
-  installed[name] = true
+local bin = vim.fn.stdpath('data') .. '/mason/bin/'
+local missing = {}
+for package, executable in pairs(servers) do
+  local path = bin .. executable
+  if vim.fn.executable(path) ~= 1 then
+    -- A dangling symlink is what an interrupted install leaves behind, and
+    -- mason refuses to install over one ("is already linked"), so every later
+    -- attempt would fail the same way until it is cleared.
+    if vim.uv.fs_lstat(path) then
+      vim.uv.fs_unlink(path)
+    end
+    missing[#missing + 1] = package
+  end
 end
 
-local missing = vim.tbl_filter(function(name)
-  return not installed[name]
-end, servers)
-
 if #missing > 0 then
+  local registry = require('mason-registry')
   registry.refresh(function()
     for _, name in ipairs(missing) do
       vim.notify('mason: installing ' .. name)
