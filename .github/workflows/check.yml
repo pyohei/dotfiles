@@ -1,0 +1,36 @@
+name: check
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install zsh
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+
+      # shellcheck ships on the runner image.
+      - name: Lint install.sh
+        run: shellcheck install.sh test/install-test.sh
+
+      - name: Parse .zshrc
+        run: zsh -n .zshrc
+
+      # `node --check .local/bin/pyohei-ai` exits 0 no matter what the file
+      # contains: it has no extension, so node does not parse it as a module.
+      # Feeding it on stdin with the type stated is the form that bites.
+      - name: Parse pyohei-ai
+        run: node --input-type=module --check < .local/bin/pyohei-ai
+
+      - name: Run install.sh against a throwaway HOME
+        run: ./test/install-test.sh
