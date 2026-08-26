@@ -134,8 +134,6 @@ vim.pack.add({
   'https://github.com/mason-org/mason.nvim',
   -- Named, because the repository itself is just called "nvim".
   { src = 'https://github.com/catppuccin/nvim', name = 'catppuccin' },
-  'https://github.com/rebelot/kanagawa.nvim',
-  'https://github.com/folke/tokyonight.nvim',
 })
 
 require('gitsigns').setup({
@@ -206,7 +204,6 @@ end
 
 -- Colour scheme -------------------------------------------------------------
 
--- kanagawa and tokyonight are installed too; :colorscheme <name> to compare.
 vim.cmd.colorscheme('catppuccin')
 
 -- LSP ----------------------------------------------------------------------
