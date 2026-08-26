@@ -145,7 +145,19 @@ require('gitsigns').setup({
 
 -- Replaces ctrlp. find_files and live_grep shell out to fd and rg, both of
 -- which are installed.
-require('telescope').setup({})
+--
+-- Both tools skip dotfiles unless told otherwise, which hides nearly the whole
+-- of a dotfiles repository. .git is excluded instead, or it drowns everything
+-- else: it holds 331 of the 364 files here.
+require('telescope').setup({
+  defaults = {
+    file_ignore_patterns = { '^%.git/' },
+  },
+  pickers = {
+    find_files = { hidden = true },
+    live_grep = { additional_args = { '--hidden' } },
+  },
+})
 local telescope = require('telescope.builtin')
 vim.keymap.set('n', '<Leader>f', telescope.find_files, { desc = 'Find files' })
 vim.keymap.set('n', '<Leader>g', telescope.live_grep, { desc = 'Grep in project' })
@@ -154,7 +166,10 @@ vim.keymap.set('n', '<Leader>h', telescope.help_tags, { desc = 'Help tags' })
 
 -- Replaces fern. A directory is an ordinary buffer here: rename a file by
 -- editing the line and saving.
-require('oil').setup({})
+require('oil').setup({
+  -- Off by default, which leaves this repository looking almost empty.
+  view_options = { show_hidden = true },
+})
 vim.keymap.set('n', '-', '<Cmd>Oil<CR>', { desc = 'Open parent directory' })
 
 -- Installs language servers into Neovim's own data directory and puts them on
