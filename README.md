@@ -5,8 +5,12 @@ This is my dot file.
 ## Install
 
 Copies `.zshrc` and `.local/bin` into `$HOME`, the AI instruction files into
-`~/.claude` and `~/.codex`, and the Neovim configuration into
-`~/.config/nvim`.
+`~/.claude` and `~/.codex`, and the Herdr, Neovim and Yazi configurations into
+their respective directories under `~/.config`.
+
+The `AGENTS.md` and `CLAUDE.md` files at the repository root are project-local
+instructions. They stay in this repository and are intentionally not copied
+into `$HOME`.
 
 ```sh
 ./install.sh -n   # dry run

@@ -21,7 +21,7 @@ repo=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
 # Each path is relative to both the repository and $HOME. A directory copies
 # the whole tree below it, so nested layouts (.config/nvim/lua/...) survive.
-targets='.zshrc .local/bin .claude/CLAUDE.md .codex/AGENTS.md .config/nvim'
+targets='.zshrc .local/bin .claude/CLAUDE.md .codex/AGENTS.md .config/herdr .config/nvim .config/yazi'
 
 usage() {
   # The comment block at the top of this file, minus the shebang and the

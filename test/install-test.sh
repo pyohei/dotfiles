@@ -19,10 +19,14 @@ fail() {
 "$repo/install.sh" >/dev/null 2>&1 || fail "the first run exited non-zero"
 [ -f "$tmp/.zshrc" ] || fail ".zshrc was not installed"
 [ -f "$tmp/.local/bin/pyohei-ai" ] || fail "pyohei-ai was not installed"
+[ -f "$tmp/.config/herdr/config.toml" ] || fail "the Herdr config was not installed"
 [ -f "$tmp/.config/nvim/init.lua" ] || fail "the nvim tree was not installed"
 [ -f "$tmp/.config/nvim/lsp/gopls.lua" ] || fail "nested nvim files were not installed"
+[ -f "$tmp/.config/yazi/theme.toml" ] || fail "the Yazi theme was not installed"
 [ -f "$tmp/.claude/CLAUDE.md" ] || fail "CLAUDE.md was not installed"
 [ -f "$tmp/.codex/AGENTS.md" ] || fail "AGENTS.md was not installed"
+[ ! -e "$tmp/CLAUDE.md" ] || fail "the project-local CLAUDE.md was installed"
+[ ! -e "$tmp/AGENTS.md" ] || fail "the project-local AGENTS.md was installed"
 
 # 2. cp -p is there so a 0700 script does not arrive world-readable. Only the
 # executable bit is asserted: git records nothing finer, so after a clone that

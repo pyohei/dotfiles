@@ -1,0 +1,14 @@
+[mgr]
+cwd = { fg = "#b8b8b8" }
+
+hovered = { fg = "#d8d8d8", bg = "#3a3a3a" }
+preview_hovered = { underline = true }
+
+[status]
+overall = { fg = "#c8c8c8", bg = "#2c2c2c" }
+
+[filetype]
+rules = [
+  { url = "*/", fg = "#a8a8a8" },
+  { url = "*",  fg = "#d0d0d0" },
+]
