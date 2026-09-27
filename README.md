@@ -4,14 +4,22 @@ This is my dot file.
 
 ## Install
 
-Copies `.local/bin` into `~/.local/bin`, the AI instruction files into
-`~/.claude` and `~/.codex`, and the Neovim configuration into
-`~/.config/nvim`.
+Copies `.zshrc` and `.local/bin` into `$HOME`, the AI instruction files into
+`~/.claude` and `~/.codex`, and the Herdr, Neovim and Yazi configurations into
+their respective directories under `~/.config`.
+
+The `AGENTS.md` and `CLAUDE.md` files at the repository root are project-local
+instructions. They stay in this repository and are intentionally not copied
+into `$HOME`.
 
 ```sh
 ./install.sh -n   # dry run
 ./install.sh
 ```
+
+A destination that already differs from the repository is reported and left
+alone, so an edit made directly in `$HOME` survives a routine run. Pass `-f`
+to let the repository win.
 
 Files this repository no longer tracks are left in place and have to be
 removed by hand.
