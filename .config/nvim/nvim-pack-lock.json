@@ -32,6 +32,10 @@
     "vim-fugitive": {
       "rev": "3b753cf8c6a4dcde6edee8827d464ba9b8c4a6f0",
       "src": "https://github.com/tpope/vim-fugitive"
+    },
+    "yazi.nvim": {
+      "rev": "3f91132889f4b76deae45191db76665bae247176",
+      "src": "https://github.com/mikavilpas/yazi.nvim"
     }
   }
 }
