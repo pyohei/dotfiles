@@ -21,3 +21,24 @@ export GOPATH="$HOME/.local/share/go"
 
 # --use-on-cd switches the node version on entering a directory that pins one.
 command -v fnm >/dev/null && eval "$(fnm env --use-on-cd)"
+
+# Use Neovim for tools that honor the standard editor environment variables,
+# while keeping the familiar Vim command in interactive shells.
+export EDITOR='nvim'
+export VISUAL="$EDITOR"
+alias vim='nvim'
+
+sc() {
+  local -a screenshots
+  local latest
+
+  screenshots=("$HOME/Documents/Screen Shot/"*.png(N))
+  if (( ${#screenshots} == 0 )); then
+    print -u2 'sc: no screenshots found'
+    return 1
+  fi
+
+  latest=$(command ls -t "${screenshots[@]}" | command head -n 1)
+  printf '"%s"' "$latest" | pbcopy
+  printf 'Copied: "%s"\n' "$latest"
+}

@@ -7,3 +7,12 @@ show_agent_labels_on_pane_borders = true
 
 [theme]
 name = "terminal"
+
+[experimental]
+switch_ascii_input_source_in_prefix = true
+
+[[keys.command]]
+key = "prefix+i"
+type = "plugin_action"
+command = "herdr-paste-image.paste"
+description = "paste clipboard image as a file path"

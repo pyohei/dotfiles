@@ -131,6 +131,7 @@ vim.pack.add({
   'https://github.com/nvim-lua/plenary.nvim', -- telescope's dependency
   'https://github.com/nvim-telescope/telescope.nvim',
   'https://github.com/stevearc/oil.nvim',
+  'https://github.com/mikavilpas/yazi.nvim',
   -- The default branch is the superseded one; main is the rewrite that
   -- targets Neovim's own treesitter integration.
   { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main' },
@@ -193,6 +194,14 @@ require('oil').setup({
 })
 vim.keymap.set('n', '-', '<Cmd>Oil<CR>', { desc = 'Open parent directory' })
 
+require('yazi').setup({
+  floating_window_scaling_factor = 0.95,
+  yazi_floating_window_winblend = 10,
+  yazi_floating_window_border = 'single',
+  keymaps = { copy_relative_path_to_selected_files = false },
+})
+vim.keymap.set({ 'n', 'x' }, '<Leader>y', '<Cmd>Yazi<CR>', { desc = 'Open Yazi' })
+
 -- Installs language servers into Neovim's own data directory and puts them on
 -- PATH, so they survive fnm switching the active node version. Must run
 -- before any server is spawned.
@@ -242,6 +251,13 @@ end
 
 -- Colour scheme -------------------------------------------------------------
 
+require('catppuccin').setup({
+  transparent_background = true,
+  float = {
+    transparent = true,
+    solid = false,
+  },
+})
 vim.cmd.colorscheme('catppuccin')
 
 -- LSP ----------------------------------------------------------------------
