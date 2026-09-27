@@ -13,5 +13,11 @@ case ":$PATH:" in
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
 
+# Go defaults GOPATH to ~/go. Keep the module cache and `go install` binaries
+# under the XDG data directory with everything else. `go env -w` can set this
+# too, but it writes outside this repository to a macOS-specific path, so the
+# value would not survive onto another machine.
+export GOPATH="$HOME/.local/share/go"
+
 # --use-on-cd switches the node version on entering a directory that pins one.
 command -v fnm >/dev/null && eval "$(fnm env --use-on-cd)"
