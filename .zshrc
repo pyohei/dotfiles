@@ -21,3 +21,9 @@ export GOPATH="$HOME/.local/share/go"
 
 # --use-on-cd switches the node version on entering a directory that pins one.
 command -v fnm >/dev/null && eval "$(fnm env --use-on-cd)"
+
+# Use Neovim for tools that honor the standard editor environment variables,
+# while keeping the familiar Vim command in interactive shells.
+export EDITOR='nvim'
+export VISUAL="$EDITOR"
+alias vim='nvim'
