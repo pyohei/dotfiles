@@ -51,4 +51,4 @@ Config, data and state then all resolve inside the working tree. Run
 
 ## LICENSE
 
-* [MIT](https://github.com/pyohei/vim-setting/blob/master/LICENSE)
+* [MIT](LICENSE)
