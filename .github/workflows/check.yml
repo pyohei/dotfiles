@@ -20,11 +20,14 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
 
       # shellcheck ships on the runner image.
-      - name: Lint install.sh
-        run: shellcheck install.sh test/install-test.sh
+      - name: Lint the POSIX scripts
+        run: shellcheck install.sh test/install-test.sh .profile
 
-      - name: Parse .zshrc
-        run: zsh -n .zshrc
+      # zsh -n takes one script; further arguments would be its parameters.
+      - name: Parse the zsh startup files
+        run: |
+          zsh -n .zshenv
+          zsh -n .zshrc
 
       # `node --check .local/bin/pyohei-ai` exits 0 no matter what the file
       # contains: it has no extension, so node does not parse it as a module.
