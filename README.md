@@ -4,7 +4,8 @@ This is my dot file.
 
 ## Install
 
-Copies `.zshrc` and `.local/bin` into `$HOME`, the AI instruction files into
+Copies the shell startup files (`.zshenv`, `.zshrc`, `.profile`) and
+`.local/bin` into `$HOME`, the AI instruction files into
 `~/.claude` and `~/.codex`, and the Herdr, Neovim and Yazi configurations into
 their respective directories under `~/.config`.
 
