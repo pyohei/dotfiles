@@ -17,7 +17,9 @@ fail() {
 
 # 1. A fresh $HOME gets every target.
 "$repo/install.sh" >/dev/null 2>&1 || fail "the first run exited non-zero"
+[ -f "$tmp/.zshenv" ] || fail ".zshenv was not installed"
 [ -f "$tmp/.zshrc" ] || fail ".zshrc was not installed"
+[ -f "$tmp/.profile" ] || fail ".profile was not installed"
 [ -f "$tmp/.local/bin/pyohei-ai" ] || fail "pyohei-ai was not installed"
 [ -f "$tmp/.config/herdr/config.toml" ] || fail "the Herdr config was not installed"
 [ -f "$tmp/.config/nvim/init.lua" ] || fail "the nvim tree was not installed"
